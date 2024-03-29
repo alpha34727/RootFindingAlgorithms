@@ -1,15 +1,19 @@
 import sympy as sp
+import matplotlib.pyplot as plt
 
 f = sp.symbols('f', cls=sp.Function)
 x = sp.symbols('x')
 
-f = x ** 3 + 2 * x - 5
-area = (sp.Number(1), sp.Number(2))
-n = 10
+f = x ** 3 + 2 * x - 5                #函數
+area = (sp.Number(1), sp.Number(2))   #範圍
+n = 10                                #估計位數
 
 #加 剪 乘 除 函數
-global cnt
 cnt = [0, 0, 0, 0, 0]
+
+#每次遞迴後的範圍
+progress_x = []
+progress_y = []
 
 #統計函數
 def Statistic(cnt, movement):
@@ -39,7 +43,7 @@ def NewtonMethodLeft(f, area, evaluate, statistic):
 
     if evaluate:
         return an.evalf(n), area[1]
-    return an.evalf(n), area[1]
+    return an, area[1]
 
 #二分逼近法
 def BisectionMethod(f, area, evalutate, statistic):
@@ -64,15 +68,26 @@ def BisectionMethod(f, area, evalutate, statistic):
 
 i = 1
 print(f'a1 : ({area[0].evalf(n)}, {area[1].evalf(n)})')
+progress_x.append(area[0].evalf(n))
+progress_y.append(area[1].evalf(n))
 while True:
     original_area = area
-    print(f'a{i+1} : ({area[0].evalf(n)}, {area[1].evalf(n)})')
-    
-    area = BisectionMethod(f, area, False, cnt)
+    area = NewtonMethodLeft(f, area, False, cnt)
 
     if str(original_area[0].evalf(n)) == str(area[0].evalf(n)) and str(original_area[1].evalf(n)) == str(area[1].evalf(n)):
         break
 
+    print(f'a{i+1} : ({area[0].evalf(n)}, {area[1].evalf(n)})')
+    progress_x.append(area[0].evalf(n))
+    progress_y.append(area[1].evalf(n))
+
     i += 1
 
 PrintStatistic(cnt)
+print(progress_x)
+print(progress_y)
+
+plt.title('Fig1')
+plt.plot([x+1 for x in range(len(progress_x))], progress_x, color='red', marker='o')
+plt.plot([x+1 for x in range(len(progress_y))], progress_y, color='blue', marker='o')
+plt.show()
