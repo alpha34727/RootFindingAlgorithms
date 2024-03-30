@@ -87,7 +87,7 @@ PrintStatistic(cnt)
 print(progress_x)
 print(progress_y)
 
-plt.title('Fig1')
+plt.title("BisectionMethod")
 plt.plot([x+1 for x in range(len(progress_x))], progress_x, color='red', marker='o')
 plt.plot([x+1 for x in range(len(progress_y))], progress_y, color='blue', marker='o')
 plt.show()
