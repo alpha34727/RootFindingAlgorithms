@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 f = sp.symbols('f', cls=sp.Function)
 x = sp.symbols('x')
 
-f = x ** 3 + 2 * x - 5
+f = (x ** 3 + 4 * x ** 2 - 10) / (3 * x ** 2 + 8 * x)
 area = [sp.Number(1), sp.Number(2)]
 n = 10
 
@@ -110,12 +110,25 @@ def SecantMethodRight(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((area[0], area[1]))
 
-while True:
-    print(progress)
-    SecantMethodRight(f, x, progress, cnt, evaluate=True)
+# 固定點迭代法
+def FPI(f, x, progress, statistic, evaluate=False):
+    area = progress[-1]
+
+    g = x - f
+
+    xn = g.subs(x, area[0])
+
+    progress.append((xn.evalf(n), area[1]))
+
+i = 0
+while i < 100:
+    # print(progress)
+    FPI(f, x, progress, cnt, evaluate=True)
     
     if progress[-1][0].evalf(n) == progress[-2][0].evalf(n) and progress[-1][1].evalf(n) == progress[-2][1].evalf(n):
         break
+
+    i += 1
 
 print(progress)
 PrintStatistic(cnt) # 印出統計資訊
