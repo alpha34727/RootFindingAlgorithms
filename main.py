@@ -1,15 +1,18 @@
 import sympy as sp
 import matplotlib.pyplot as plt
+import copy
 
 f = sp.symbols('f', cls=sp.Function)
 x = sp.symbols('x')
 
 f = (x ** 3 + 4 * x ** 2 - 10) / (3 * x ** 2 + 8 * x)
 area = [sp.Number(1), sp.Number(2)]
+area_brent = [sp.Number(1), sp.Number(2), sp.Number(1.5)]
 n = 10
 
 cnt = [0, 0, 0, 0, 0, 0] # 加 剪 乘 除 函數 迭代數
-progress = [tuple(area), tuple(area)]
+progress_original = [tuple(area), tuple(area)]
+progress_brent = [tuple(area_brent), tuple(area_brent)]
 
 def Statistic(cnt, movement):
     """統計函數，負責統計運算過程中的加減乘除與函數運算"""
@@ -25,22 +28,40 @@ def PrintStatistic(cnt):
         print(name[i], cnt[i], sep=' : ')
 
 def DrawGraph(progress, name='Figure 1'):
-    progress = progress[1:]
-
-    left_data = [x for x, y in progress]
-    right_data = [y for x, y in progress]
-
     plt.title(name)
-    plt.plot([x for x in range(len(left_data))], left_data, color='red', marker='o')
-    plt.plot([x for x in range(len(right_data))], right_data, color='blue', marker='o')
+
+    data = []
+    for i in range(len(progress[0])):
+        tmp = []
+        for area in progress[1:]:
+            tmp.append(area[i])
+        data.append(tmp)
+
+    print(data)
+
+    colors = ['red', 'blue', 'green']
+    for i in range(len(progress[0])):
+        plt.plot([x for x in range(len(data[i]))], data[i], color=colors[i], marker='o')
+
     plt.show()
 
-def OutputCSV(progress, name):
+def OutputCSV(progress, name, title):
     if not name.endswith('.csv') or not name.endswith('.txt'):
         name = name + ".csv"
     with open(name, 'w') as file:
-        for area in progress:
+        file.write(title + ',\n')
+        for area in progress[1:]:
             file.write(f'{area[0]}, {area[1]}\n')
+
+def CSVFusion(CSVs):
+    output_str = []
+    for i in CSVs:
+        with open(i, 'r') as file:
+            output_str += file.read()
+    
+    with open('fusioned.csv', 'w') as file:
+        file.writelines(output_str)
+
 
 
 # 牛頓法（左逼近）
@@ -142,18 +163,67 @@ def FPIRight(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((area[0], area[1]))
 
-i = 0
-while i < 100:
-    # print(progress)
-    FPIRight(f, x, progress, cnt, evaluate=True)
+def BrentMethod(f, x, progress, statistic, evaluate=False):
+    a, b, c = progress[-1][0], progress[-1][2], progress[-1][1]
+
+    r = f.subs(x, a) / f.subs(x, c)
+    s = f.subs(x, b) / f.subs(x, a)
+    t = f.subs(x, a) / f.subs(x, c)
     
-    if progress[-1][0].evalf(n) == progress[-2][0].evalf(n) and progress[-1][1].evalf(n) == progress[-2][1].evalf(n):
-        break
+    p = s * (t * (r - t) * (c - b) - (1 - r) * (b - a))
+    q = (t - 1) * (r - 1) * (s - 1)
 
-    i += 1
+    b = b + p / q
 
-print(progress)
-# PrintStatistic(cnt) # 印出統計資訊
-OutputCSV(progress, "aa")
-# DrawGraph(progress, name='SecantMethodRight')
+    progress.append((a, c, b))
 
+def calc(func):
+    name=func.__name__
+    if not func.__name__ == 'BrentMethod':
+        progress = copy.deepcopy(progress_original)
+    else:
+        progress = copy.deepcopy(progress_brent)
+
+    i = 0
+    while i < 100:
+        # print(progress)
+        func(f, x, progress, cnt, evaluate=True)
+
+        if not func.__name__ == 'BrentMethod':
+            if str(progress[-1][0].evalf(n)) == str(progress[-2][0].evalf(n)) and str(progress[-1][1].evalf(n)) == str(progress[-2][1].evalf(n)):
+                progress = progress[:-2]
+                break
+        else:
+            if str(progress[-1][2].evalf(n)) == str(progress[-2][2].evalf(n)):
+                progress = progress[:-2]
+                break
+
+        i += 1
+
+    print(progress)
+    # PrintStatistic(cnt) # 印出統計資訊
+    # OutputCSV(progress, name, name)
+    DrawGraph(progress, name=name)
+
+algorithms = [NewtonMethodLeft,
+              NewtonMethodRight,
+              BisectionMethod,
+              SecantMethodLeft,
+              SecantMethodRight,
+              FPILeft,
+              FPIRight,
+              BrentMethod]
+
+for algorithm in algorithms:
+    calc(algorithm)
+
+
+# CSVs = ['牛頓法(左逼近).csv',
+#         '牛頓法(右逼近).csv',
+#         '二分法.csv',
+#         '割線法(左逼近).csv',
+#         '割線法(右逼近).csv',
+#         '固定點迭代法(左逼近).csv',
+#         '固定點迭代法(右逼近).csv']
+# CSVFusion(CSVs)
+# calc(BrentMethod, 'BrentMethod')
