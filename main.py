@@ -35,7 +35,12 @@ def DrawGraph(progress, name='Figure 1'):
     plt.plot([x for x in range(len(right_data))], right_data, color='blue', marker='o')
     plt.show()
 
-
+def OutputCSV(progress, name):
+    if not name.endswith('.csv') or not name.endswith('.txt'):
+        name = name + ".csv"
+    with open(name, 'w') as file:
+        for area in progress:
+            file.write(f'{area[0]}, {area[1]}\n')
 
 
 # 牛頓法（左逼近）
@@ -106,12 +111,12 @@ def SecantMethodRight(f, x, progress, statistic, evaluate=False):
     statistic = Statistic(statistic, [0, 3, 1, 1, 3, 1])
 
     if evaluate:
-        progress.append((area[0], xn.evalf(n)))
+        progress.append((area[0], area[1].evalf(n)))
     else:
         progress.append((area[0], area[1]))
 
 # 固定點迭代法
-def FPI(f, x, progress, statistic, evaluate=False):
+def FPILeft(f, x, progress, statistic, evaluate=False):
     area = progress[-1]
     g = x - f
 
@@ -124,10 +129,23 @@ def FPI(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((xn, area[1]))
 
+def FPIRight(f, x, progress, statistic, evaluate=False):
+    area = progress[-1]
+    g = x - f
+
+    xn = g.subs(x, area[1])
+
+    statistic = Statistic(statistic, [0, 1, 0, 0, 1, 1])
+
+    if evaluate:
+        progress.append((area[0], xn.evalf(n)))
+    else:
+        progress.append((area[0], area[1]))
+
 i = 0
 while i < 100:
     # print(progress)
-    FPI(f, x, progress, cnt, evaluate=True)
+    FPIRight(f, x, progress, cnt, evaluate=True)
     
     if progress[-1][0].evalf(n) == progress[-2][0].evalf(n) and progress[-1][1].evalf(n) == progress[-2][1].evalf(n):
         break
@@ -135,6 +153,7 @@ while i < 100:
     i += 1
 
 print(progress)
-PrintStatistic(cnt) # 印出統計資訊
-DrawGraph(progress, name='SecantMethodRight')
+# PrintStatistic(cnt) # 印出統計資訊
+OutputCSV(progress, "aa")
+# DrawGraph(progress, name='SecantMethodRight')
 
