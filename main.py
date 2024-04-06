@@ -113,12 +113,16 @@ def SecantMethodRight(f, x, progress, statistic, evaluate=False):
 # 固定點迭代法
 def FPI(f, x, progress, statistic, evaluate=False):
     area = progress[-1]
-
     g = x - f
 
     xn = g.subs(x, area[0])
 
-    progress.append((xn.evalf(n), area[1]))
+    statistic = Statistic(statistic, [0, 1, 0, 0, 1, 1])
+
+    if evaluate:
+        progress.append((xn.evalf(n), area[1]))
+    else:
+        progress.append((xn, area[1]))
 
 i = 0
 while i < 100:
