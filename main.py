@@ -84,35 +84,35 @@ def BisectionMethod(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((area[0], area[1]))
 
-# 割線法（右逼近）
-def SecantMethodRight(f, x, progress, statistic, evaluate=False):
-    area = progress[-1]
-
-    an = area[1] - f.subs(x, area[1]) * (area[1] - area[0]) / (f.subs(x, area[1]) - f.subs(x, area[0]))
-
-    statistic = Statistic(statistic, [0, 3, 1, 1, 3, 1])
-
-    if evaluate:
-        progress.append((area[0], an.evalf(n)))
-    else:
-        progress.append((area[0], an))
-
 # 割線法（左逼近）
 def SecantMethodLeft(f, x, progress, statistic, evaluate=False):
     area = progress[-1]
-
-    an = area[0] - f.subs(x, area[0]) * (area[1] - area[0]) / (f.subs(x, area[1]) - f.subs(x, area[0]))
+    xn = area[0] - (area[0] - area[1]) / (f.subs(x, area[0]) - f.subs(x, area[1])) * (f.subs(x, area[0]))
+    area = [xn, area[1]]
 
     statistic = Statistic(statistic, [0, 3, 1, 1, 3, 1])
 
     if evaluate:
-        progress.append((an.evalf(n), area[1]))
+        progress.append((area[0].evalf(n), area[1]))
     else:
-        progress.append((an, area[0]))
+        progress.append((area[0], area[1]))
+
+# 割線法（右逼近）
+def SecantMethodRight(f, x, progress, statistic, evaluate=False):
+    area = progress[-1]
+    xn = area[1] - (area[1] - area[0]) / (f.subs(x, area[1]) - f.subs(x, area[0])) * (f.subs(x, area[1]))
+    area = [area[0], xn]
+
+    statistic = Statistic(statistic, [0, 3, 1, 1, 3, 1])
+
+    if evaluate:
+        progress.append((area[0], xn.evalf(n)))
+    else:
+        progress.append((area[0], area[1]))
 
 while True:
     print(progress)
-    BisectionMethod(f, x, progress, cnt, evaluate=True)
+    SecantMethodRight(f, x, progress, cnt, evaluate=True)
     
     if progress[-1][0].evalf(n) == progress[-2][0].evalf(n) and progress[-1][1].evalf(n) == progress[-2][1].evalf(n):
         break
@@ -120,3 +120,4 @@ while True:
 print(progress)
 PrintStatistic(cnt) # 印出統計資訊
 DrawGraph(progress, name='SecantMethodRight')
+
