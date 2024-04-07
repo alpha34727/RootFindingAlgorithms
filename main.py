@@ -5,9 +5,10 @@ import copy
 f = sp.symbols('f', cls=sp.Function)
 x = sp.symbols('x')
 
-f = (x ** 3 + 4 * x ** 2 - 10) / (3 * x ** 2 + 8 * x)
+# f = (x ** 3 + 4 * x ** 2 - 10) / (3 * x ** 2 + 8 * x)
+f = sp.sin(x+2)
 area = [sp.Number(1), sp.Number(2)]
-area_brent = [sp.Number(1), sp.Number(2), sp.Number(1.5)]
+area_brent = [sp.Number(1), sp.Number(2), sp.Number(1.6)]
 n = 10
 
 cnt = [0, 0, 0, 0, 0, 0] # 加 剪 乘 除 函數 迭代數
@@ -37,11 +38,12 @@ def DrawGraph(progress, name='Figure 1'):
             tmp.append(area[i])
         data.append(tmp)
 
-    print(data)
-
     colors = ['red', 'blue', 'green']
     for i in range(len(progress[0])):
-        plt.plot([x for x in range(len(data[i]))], data[i], color=colors[i], marker='o')
+        try:
+            plt.plot([x for x in range(len(data[i]))], data[i], color=colors[i], marker='o')
+        except:
+            pass
 
     plt.show()
 
@@ -51,12 +53,12 @@ def OutputCSV(progress, name, title):
     with open(name, 'w') as file:
         file.write(title + ',\n')
         for area in progress[1:]:
-            file.write(f'{area[0]}, {area[1]}\n')
+            file.write(f'{area}'[1:-2] + '\n')
 
 def CSVFusion(CSVs):
     output_str = []
     for i in CSVs:
-        with open(i, 'r') as file:
+        with open(i.__name__ + '.csv', 'r') as file:
             output_str += file.read()
     
     with open('fusioned.csv', 'w') as file:
@@ -175,7 +177,10 @@ def BrentMethod(f, x, progress, statistic, evaluate=False):
 
     b = b + p / q
 
-    progress.append((a, c, b))
+    if evaluate:
+        progress.append((a, c, b.evalf(n)))
+    else:
+        progress.append((a, c, b))
 
 def calc(func):
     name=func.__name__
@@ -185,7 +190,7 @@ def calc(func):
         progress = copy.deepcopy(progress_brent)
 
     i = 0
-    while i < 100:
+    while i < 30:
         # print(progress)
         func(f, x, progress, cnt, evaluate=True)
 
@@ -199,6 +204,8 @@ def calc(func):
                 break
 
         i += 1
+
+        print(i)
 
     print(progress)
     # PrintStatistic(cnt) # 印出統計資訊
@@ -217,13 +224,4 @@ algorithms = [NewtonMethodLeft,
 for algorithm in algorithms:
     calc(algorithm)
 
-
-# CSVs = ['牛頓法(左逼近).csv',
-#         '牛頓法(右逼近).csv',
-#         '二分法.csv',
-#         '割線法(左逼近).csv',
-#         '割線法(右逼近).csv',
-#         '固定點迭代法(左逼近).csv',
-#         '固定點迭代法(右逼近).csv']
-# CSVFusion(CSVs)
-# calc(BrentMethod, 'BrentMethod')
+# CSVFusion(algorithms)
