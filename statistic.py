@@ -56,7 +56,8 @@ def CSVFusion(algorithms, save_file=False):
     data = []
     data_output = []
 
-    CSVs = [x.__name__ + '.csv' for x in algorithms]
+    # CSVs = [x.__name__ + '.csv' for x in algorithms]
+    CSVs = os.listdir('./Result/')
 
     for csv in CSVs:
         with open('./Result/' + csv, 'r') as file:

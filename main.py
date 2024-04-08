@@ -7,10 +7,11 @@ f = sp.symbols('f', cls=sp.Function)
 x = sp.symbols('x')
 
 # f = (x ** 3 + 4 * x ** 2 - 10) / (3 * x ** 2 + 8 * x)
-# f = sp.sin(x+2)
-f = x ** 3 + 2 * x - 5
-area = [sp.Number(1), sp.Number(2)]
-area_brent = [sp.Number(1), sp.Number(2), sp.Number(1.6)]
+# f = 2 * x ** 3 + x ** 2 - 4 * x - 3
+f = 10*(x+0.25)**2-0.2
+
+area = [sp.Number(-0.5), sp.Number(0.5)]
+area_brent = [sp.Number(-0.5), sp.Number(0.5), sp.Number(0)]
 n = 10
 
 cnt = [0, 0, 0, 0, 0, 0] # 加 剪 乘 除 函數 迭代數
@@ -54,8 +55,8 @@ def BisectionMethod(f, x, progress, statistic, evaluate=False):
     elif same_side < 0: # 異側
         area = [area[0], amid]
     else:
-        if f.subs(x, a) == 0:
-            area = [a, a]
+        if f.subs(x, area[0]) == 0:
+            area = [area[0], area[0]]
         else:
             area = [amid, amid]
 
@@ -136,32 +137,6 @@ def BrentMethod(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((a, c, b))
 
-def AccurateValue(f, x, a, b, tol=100):
-    last_a = a
-    last_b = b
-
-    while True:
-        amid = (a + b) / 2
-        same_side = f.subs(x, amid) * f.subs(x, a)
-
-        if same_side > 0: # 同側
-            a, b = amid, b
-        elif same_side < 0: # 異側
-            a, b = a, amid
-        else:
-            if f.subs(x, a) == 0:
-                return a
-            else:
-                return amid
-            
-        if str(a.evalf(tol)) == str(last_a.evalf(tol)) and str(b.evalf(tol)) == str(last_b.evalf(tol)):
-            break
-        
-        last_a = a
-        last_b = b
-
-    return a
-
 def calc(func):
     name=func.__name__
     if not func.__name__ == 'BrentMethod':
@@ -172,27 +147,29 @@ def calc(func):
     ResetStatistic(cnt)
     print(f'\n使用演算法：{name}\n')
 
-    print(f'迭代次數：00', end='')
+    print(f'迭代次數：000', end='')
 
-    i = 0
-    while i < 50:
-        # print(progress)
-        func(f, x, progress, cnt, evaluate=True)
+    try:
+        i = 0
+        while i < 1000:
+            # print(progress)
+            func(f, x, progress, cnt, evaluate=True)
 
-        if not func.__name__ == 'BrentMethod':
-            if str(progress[-1][0].evalf(n)) == str(progress[-2][0].evalf(n)) and str(progress[-1][1].evalf(n)) == str(progress[-2][1].evalf(n)):
-                progress = progress[:-2]
-                break
-        else:
-            if str(progress[-1][2].evalf(n)) == str(progress[-2][2].evalf(n)):
-                progress = progress[:-2]
-                break
+            # if not func.__name__ == 'BrentMethod':
+            #     if str(progress[-1][0].evalf(n)) == str(progress[-2][0].evalf(n)) and str(progress[-1][1].evalf(n)) == str(progress[-2][1].evalf(n)):
+            #         progress = progress[:-2]
+            #         break
+            # else:
+            #     if str(progress[-1][2].evalf(n)) == str(progress[-2][2].evalf(n)):
+            #         progress = progress[:-2]
+            #         break
 
-        i += 1
+            i += 1
 
-
-        print(f'\x1B[2K\x1B[12D', end='')
-        print(f'迭代次數：{i:02}', end='')
+            print(f'\x1B[2K\x1B[13D', end='')
+            print(f'迭代次數：{i:03d}', end='')
+    except Exception as err:
+        print(err)
 
     print()
 
@@ -210,11 +187,10 @@ algorithms = [NewtonMethodLeft,
               FPIRight,
               BrentMethod]
 
-print('\n計算精確值\n')
-accurate_value = AccurateValue(f, x, area[0], area[1])
-print(accurate_value.evalf(100))
-
 for algorithm in algorithms:
-    calc(algorithm)
+    try:
+        calc(algorithm)
+    except Exception as err:
+        print(err)
 
 CSVFusion(algorithms, save_file=True)
