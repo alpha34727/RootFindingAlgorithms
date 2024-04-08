@@ -1,12 +1,14 @@
 import sympy as sp
-import matplotlib.pyplot as plt
 import copy
+
+from statistic import *
 
 f = sp.symbols('f', cls=sp.Function)
 x = sp.symbols('x')
 
 # f = (x ** 3 + 4 * x ** 2 - 10) / (3 * x ** 2 + 8 * x)
-f = sp.sin(x+2)
+# f = sp.sin(x+2)
+f = x ** 3 + 2 * x - 5
 area = [sp.Number(1), sp.Number(2)]
 area_brent = [sp.Number(1), sp.Number(2), sp.Number(1.6)]
 n = 10
@@ -14,57 +16,6 @@ n = 10
 cnt = [0, 0, 0, 0, 0, 0] # 加 剪 乘 除 函數 迭代數
 progress_original = [tuple(area), tuple(area)]
 progress_brent = [tuple(area_brent), tuple(area_brent)]
-
-def Statistic(cnt, movement):
-    """統計函數，負責統計運算過程中的加減乘除與函數運算"""
-
-    for i in range(6):
-        cnt[i] += movement[i]
-
-def PrintStatistic(cnt):
-    """印出統計資料"""
-
-    name = ['加法', '減法', '乘法', '除法', '函數運算', '迭代次數']
-    for i in range(6):
-        print(name[i], cnt[i], sep=' : ')
-
-def DrawGraph(progress, name='Figure 1'):
-    plt.title(name)
-
-    data = []
-    for i in range(len(progress[0])):
-        tmp = []
-        for area in progress[1:]:
-            tmp.append(area[i])
-        data.append(tmp)
-
-    colors = ['red', 'blue', 'green']
-    for i in range(len(progress[0])):
-        try:
-            plt.plot([x for x in range(len(data[i]))], data[i], color=colors[i], marker='o')
-        except:
-            pass
-
-    plt.show()
-
-def OutputCSV(progress, name, title):
-    if not name.endswith('.csv') or not name.endswith('.txt'):
-        name = name + ".csv"
-    with open(name, 'w') as file:
-        file.write(title + ',\n')
-        for area in progress[1:]:
-            file.write(f'{area}'[1:-2] + '\n')
-
-def CSVFusion(CSVs):
-    output_str = []
-    for i in CSVs:
-        with open(i.__name__ + '.csv', 'r') as file:
-            output_str += file.read()
-    
-    with open('fusioned.csv', 'w') as file:
-        file.writelines(output_str)
-
-
 
 # 牛頓法（右逼近）
 def NewtonMethodRight(f, x, progress, statistic, evaluate=False):
@@ -103,7 +54,10 @@ def BisectionMethod(f, x, progress, statistic, evaluate=False):
     elif same_side < 0: # 異側
         area = [area[0], amid]
     else:
-        area = [amid, amid]
+        if f.subs(x, a) == 0:
+            area = [a, a]
+        else:
+            area = [amid, amid]
 
     statistic = Statistic(statistic, [1, 0, 1, 1, 2, 1])
 
@@ -182,6 +136,32 @@ def BrentMethod(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((a, c, b))
 
+def AccurateValue(f, x, a, b, tol=100):
+    last_a = a
+    last_b = b
+
+    while True:
+        amid = (a + b) / 2
+        same_side = f.subs(x, amid) * f.subs(x, a)
+
+        if same_side > 0: # 同側
+            a, b = amid, b
+        elif same_side < 0: # 異側
+            a, b = a, amid
+        else:
+            if f.subs(x, a) == 0:
+                return a
+            else:
+                return amid
+            
+        if str(a.evalf(tol)) == str(last_a.evalf(tol)) and str(b.evalf(tol)) == str(last_b.evalf(tol)):
+            break
+        
+        last_a = a
+        last_b = b
+
+    return a
+
 def calc(func):
     name=func.__name__
     if not func.__name__ == 'BrentMethod':
@@ -189,8 +169,13 @@ def calc(func):
     else:
         progress = copy.deepcopy(progress_brent)
 
+    ResetStatistic(cnt)
+    print(f'\n使用演算法：{name}\n')
+
+    print(f'迭代次數：00', end='')
+
     i = 0
-    while i < 30:
+    while i < 50:
         # print(progress)
         func(f, x, progress, cnt, evaluate=True)
 
@@ -205,11 +190,15 @@ def calc(func):
 
         i += 1
 
-        print(i)
 
-    print(progress)
-    # PrintStatistic(cnt) # 印出統計資訊
-    # OutputCSV(progress, name, name)
+        print(f'\x1B[2K\x1B[12D', end='')
+        print(f'迭代次數：{i:02}', end='')
+
+    print()
+
+    print(progress[-1])
+    PrintStatistic(cnt) # 印出統計資訊
+    OutputCSV(progress, name, name)
     DrawGraph(progress, name=name)
 
 algorithms = [NewtonMethodLeft,
@@ -221,7 +210,11 @@ algorithms = [NewtonMethodLeft,
               FPIRight,
               BrentMethod]
 
+print('\n計算精確值\n')
+accurate_value = AccurateValue(f, x, area[0], area[1])
+print(accurate_value.evalf(100))
+
 for algorithm in algorithms:
     calc(algorithm)
 
-# CSVFusion(algorithms)
+CSVFusion(algorithms, save_file=True)
