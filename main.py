@@ -66,8 +66,8 @@ def CSVFusion(CSVs):
 
 
 
-# 牛頓法（左逼近）
-def NewtonMethodLeft(f, x, progress, statistic, evaluate=False):
+# 牛頓法（右逼近）
+def NewtonMethodRight(f, x, progress, statistic, evaluate=False):
     area = progress[-1]
     an = area[1] - f.subs(x, area[1]) / f.diff().subs(x, area[1])
 
@@ -78,8 +78,8 @@ def NewtonMethodLeft(f, x, progress, statistic, evaluate=False):
     else:
         progress.append((area[0], an))
 
-# 牛頓法（右逼近）
-def NewtonMethodRight(f, x, progress, statistic, evaluate=False):
+# 牛頓法（左逼近）
+def NewtonMethodLeft(f, x, progress, statistic, evaluate=False):
     area = progress[-1]
     an = area[0] - f.subs(x, area[0]) / f.diff().subs(x, area[0])
 
